@@ -1,6 +1,7 @@
 package api.scripts.tg_application;
 
 import api.pojo_classes.tg_application.AddAUser;
+import api.pojo_classes.tg_application.PatchUserInfo;
 import api.pojo_classes.tg_application.UpdateAUser;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -42,7 +43,7 @@ public class  Project02 {
         response = RestAssured.given()
                 .spec(baseSpec)
                 .when().get("/students")
-                .then().log().body().assertThat().statusCode(200).time(Matchers.lessThan(700L))
+                .then().log().body().assertThat().statusCode(200).time(Matchers.lessThan(7000L))
                 .body("$", hasSize(greaterThan(1))).body("[1].firstName", equalTo("John")).body("[1].lastName", equalTo("Doe"))
                 .extract().response();
 
@@ -63,7 +64,7 @@ public class  Project02 {
                 .body(createUser)
                 .when().post("/students")
                 .then().log().body()
-                .assertThat().statusCode(200).time(Matchers.lessThan(700L))
+                .assertThat().statusCode(200).time(Matchers.lessThan(7000L))
                 .body("firstName", equalTo("Anatoli")).body("lastName", equalTo("Kamyshev")).body("dob", equalTo("1995-01-15"))
                 .extract().response();
         int newUser_id = response.jsonPath().getInt("id");
@@ -81,7 +82,7 @@ public class  Project02 {
         response = RestAssured.given()
                 .spec(baseSpec)
                 .when().get("/students/" + newUser_id)
-                .then().log().body().assertThat().statusCode(200).time(Matchers.lessThan(700L))
+                .then().log().body().assertThat().statusCode(200).time(Matchers.lessThan(7000L))
                 .body("firstName", equalTo(firstNameOfNewUser)).body("lastName", equalTo(lastNameOfNewUser))
                 .extract().response();
 
@@ -98,11 +99,12 @@ public class  Project02 {
                 .build();
         response = RestAssured.given()
                 .spec(baseSpec)
+                .body(updateAUser)
                 .when().put("/students/" + newUser_id)
                 .then().log().body()
-                .assertThat().statusCode(200).time(Matchers.lessThan(700L))
-                .body("firstName", equalTo("Caroline")).body("lastName", equalTo("Kamysheva"))
-                .body("email", equalTo("caroline.kamysheva@gmail.com")).body("dob", equalTo("1990-06-10"))
+                .assertThat().statusCode(200).time(Matchers.lessThan(7000L))
+                .body("firstName", equalTo(updateAUser.getFirstName())).body("lastName", equalTo(updateAUser.getLastName()))
+                .body("email", equalTo(updateAUser.getEmail())).body("dob", equalTo(updateAUser.getDob()))
                 .extract().response();
 
         //5. Partially update an existing User
@@ -113,6 +115,18 @@ public class  Project02 {
          * and untouched fields remain the same.
          */
 
+        PatchUserInfo patchUpdateUser = PatchUserInfo.builder()
+                .email("newcaroline.kamysheva@yahoo.com").dob("1985-02-11")
+                .build();
+        response = RestAssured.given()
+                .spec(baseSpec)
+                .body(patchUpdateUser)
+                .when().patch("/students/" + newUser_id)
+                .then().log().body()
+                .assertThat().statusCode(200)
+                .body("firstName", equalTo(updateAUser.getFirstName())).body("lastName", equalTo(updateAUser.getLastName()))
+                .body("email", equalTo(patchUpdateUser.getEmail())).body("dob", equalTo(patchUpdateUser.getDob()))
+                .extract().response();
 
         //6. Retrieve a list of all users again
         /** 6. Retrieve a list of all users again
@@ -123,6 +137,12 @@ public class  Project02 {
          * - Validate the number of students when you get all students are more than equal to 3
          */
 
+        response = RestAssured.given()
+                .spec(baseSpec)
+                .when().get("/students")
+                .then().log().body().assertThat().statusCode(200).time(Matchers.lessThan(7000L))
+                .body("$", hasSize(greaterThan(2)))
+                .extract().response();
 
         //7. Retrieve a specific user created to confirm the update.
         /** 7. Retrieve a specific user created to confirm the update.
@@ -134,7 +154,14 @@ public class  Project02 {
          * user you updated.
          */
 
-
+        response = RestAssured.given()
+                .spec(baseSpec)
+                .when().get("/students/" + newUser_id)
+                .then().log().body()
+                .assertThat().statusCode(200).time(Matchers.lessThan(7000L))
+                .body("firstName", equalTo(updateAUser.getFirstName())).body("lastName", equalTo(updateAUser.getLastName()))
+                .body("email", equalTo(patchUpdateUser.getEmail())).body("dob", equalTo(patchUpdateUser.getDob()))
+                .extract().response();
 
         //8. Finally, delete the user that you created.
         /** 8. Finally, delete the user that you created.
@@ -142,10 +169,13 @@ public class  Project02 {
          * - Assert that the response time is less than a particular value, say 200ms, to ensure the API's
          * performance is within acceptable limits. ( If it’s more than 200, you can increase the limit )
          */
+
         response = RestAssured.given()
              .spec(baseSpec)
              .when().delete("/students/" + newUser_id)
-             .then().log().all().extract().response(); /**/
+             .then().log().all()
+                .assertThat().statusCode(200).time(Matchers.lessThan(7000L))
+                .extract().response(); /**/
     }
 
 }
