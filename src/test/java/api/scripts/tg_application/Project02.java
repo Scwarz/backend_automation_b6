@@ -1,6 +1,7 @@
 package api.scripts.tg_application;
 
 import api.pojo_classes.tg_application.AddAUser;
+import api.pojo_classes.tg_application.UpdateAUser;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
@@ -15,7 +16,7 @@ import org.hamcrest.Matchers;
 
 import static org.hamcrest.Matchers.*;
 
-public class Project02 {
+public class  Project02 {
     Response response;
 
     RequestSpecification baseSpec;
@@ -92,8 +93,17 @@ public class Project02 {
          * performance is within acceptable limits. ( If it’s more than 200, you can increase the limit )
          * - Retrieve the updated student's details and validate that the updated details match the changes made.
          */
-
-
+        UpdateAUser updateAUser = UpdateAUser.builder()
+                .firstName("Caroline").lastName("Kamysheva").email("caroline.kamysheva@gmail.com").dob("1990-06-10")
+                .build();
+        response = RestAssured.given()
+                .spec(baseSpec)
+                .when().put("/students/" + newUser_id)
+                .then().log().body()
+                .assertThat().statusCode(200).time(Matchers.lessThan(700L))
+                .body("firstName", equalTo("Caroline")).body("lastName", equalTo("Kamysheva"))
+                .body("email", equalTo("caroline.kamysheva@gmail.com")).body("dob", equalTo("1990-06-10"))
+                .extract().response();
 
         //5. Partially update an existing User
         /** 5. Partially update an existing User
