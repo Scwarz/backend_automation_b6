@@ -34,7 +34,7 @@ public class DeleteUser {
     public void deleteAUser(){
         response = RestAssured.given()
                 .spec(baseSpec)
-                .when().delete("/students/" + 1483)
+                .when().delete("/students/" + 1502)
                 .then().log().all()
                 .assertThat().statusCode(200).time(Matchers.lessThan(7000L))
                 .extract().response();
